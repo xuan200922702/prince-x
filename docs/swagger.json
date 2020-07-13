@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "基于Gin + Vue + Element UI的前后端分离权限管理系统的接口文档\n添加qq: 200922702 请备注，谢谢！",
+        "description": "基于Gin + ant design  Pro V4的前后端分离权限管理系统的接口文档\n添加qq: 200922702 请备注，谢谢！",
         "title": "prince-x API",
         "contact": {},
         "license": {
