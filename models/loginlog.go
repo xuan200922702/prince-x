@@ -40,3 +40,26 @@ func (e *LoginLog) Create() (LoginLog, error) {
 	doc = *e
 	return doc, nil
 }
+
+func (e *LoginLog) GetPage(pageSize int, pageIndex int) ([]LoginLog, int, error) {
+	var doc []LoginLog
+
+	table := orm.Eloquent.Select("*").Table(e.TableName())
+	if e.Ipaddr != "" {
+		table = table.Where("ipaddr = ?", e.Ipaddr)
+	}
+	if e.Status != "" {
+		table = table.Where("status = ?", e.Status)
+	}
+	if e.Username != "" {
+		table = table.Where("userName = ?", e.Username)
+	}
+
+	var count int
+
+	if err := table.Order("info_id desc").Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&doc).Error; err != nil {
+		return nil, 0, err
+	}
+	table.Where("`deleted_at` IS NULL").Count(&count)
+	return doc, count, nil
+}

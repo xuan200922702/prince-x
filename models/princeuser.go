@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"prince-x/global/orm"
 	"prince-x/tools"
 )
@@ -135,5 +137,42 @@ func (e *PrinceUser) Get() (PrinceUserView PrinceUserView, err error) {
 		return
 	}
 	PrinceUserView.Password = ""
+	return
+}
+
+//加密
+func (e *PrinceUser) Encrypt() (err error) {
+	if e.Password == "" {
+		return
+	}
+
+	var hash []byte
+	if hash, err = bcrypt.GenerateFromPassword([]byte(e.Password), bcrypt.DefaultCost); err != nil {
+		return
+	} else {
+		e.Password = string(hash)
+		return
+	}
+}
+
+//添加
+func (e PrinceUser) Insert() (id int, err error) {
+	if err = e.Encrypt(); err != nil {
+		return
+	}
+
+	// check 用户名
+	var count int
+	orm.Eloquent.Table(e.TableName()).Where("username = ?", e.Username).Count(&count)
+	if count > 0 {
+		err = errors.New("账户已存在！")
+		return
+	}
+
+	//添加数据
+	if err = orm.Eloquent.Table(e.TableName()).Create(&e).Error; err != nil {
+		return
+	}
+	id = e.UserId
 	return
 }

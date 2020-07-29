@@ -155,7 +155,7 @@ var (
 	ErrMissingLoginValues = errors.New("missing Username or Password")
 
 	// ErrFailedAuthentication indicates authentication failed, could be faulty username or password
-	ErrFailedAuthentication = errors.New("incorrect Username or Password")
+	ErrFailedAuthentication = errors.New("错误的用户名或者密码")
 
 	// ErrFailedTokenCreation indicates JWT Token failed to create, reason unknown
 	ErrFailedTokenCreation = errors.New("failed to create JWT Token")
@@ -318,6 +318,7 @@ func (mw *GinJWTMiddleware) MiddlewareInit() error {
 				"code":   http.StatusOK,
 				"token":  token,
 				"expire": expire.Format(time.RFC3339),
+				"msg":    "登录成功",
 			})
 		}
 	}

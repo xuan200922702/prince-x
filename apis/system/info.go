@@ -39,14 +39,14 @@ func GetInfo(c *gin.Context) {
 
 	mp["introduction"] = " am a super administrator"
 
-	mp["avatar"] = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
+	mp["avatar"] = "http://ipc.zhangpengxuan.com/2020-07-20-%E4%BD%A0%E7%9A%84%E5%90%8D%E5%AD%971.jpeg"
 	if user.Avatar != "" {
 		mp["avatar"] = user.Avatar
 	}
-	mp["userName"] = user.NickName
+	mp["username"] = user.Username
 	mp["userId"] = user.UserId
 	mp["deptId"] = user.DeptId
-	mp["name"] = user.NickName
+	mp["nickname"] = user.NickName
 
 	app.OK(c, mp, "")
 }

@@ -2,6 +2,7 @@ package system
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"prince-x/models"
 	"prince-x/tools"
 	"prince-x/tools/app"
@@ -23,7 +24,7 @@ import (
 func GetPrinceUserList(c *gin.Context) {
 	var data models.PrinceUser
 	var err error
-	var pageSize = 10
+	var pageSize = 3
 	var pageIndex = 1
 
 	size := c.Request.FormValue("pageSize")
@@ -51,4 +52,24 @@ func GetPrinceUserList(c *gin.Context) {
 	tools.HasError(err, "", -1)
 
 	app.PageOK(c, result, count, pageIndex, pageSize, "")
+}
+
+// @Summary 创建用户
+// @Description 获取JSON
+// @Tags 用户
+// @Accept  application/json
+// @Product application/json
+// @Param data body models.SysUser true "用户数据"
+// @Success 200 {string} string	"{"code": 200, "message": "添加成功"}"
+// @Success 200 {string} string	"{"code": -1, "message": "添加失败"}"
+// @Router /api/v1/sysUser [post]
+func CreatePrinceUser(c *gin.Context) {
+	var princeuser models.PrinceUser
+	err := c.BindWith(&princeuser, binding.JSON)
+	tools.HasError(err, "非法数据格式", 500)
+
+	princeuser.CreateBy = tools.GetUserIdStr(c)
+	id, err := princeuser.Insert()
+	tools.HasError(err, "添加失败,用户名已存在", 500)
+	app.OK(c, id, "添加成功")
 }

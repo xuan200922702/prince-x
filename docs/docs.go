@@ -267,7 +267,7 @@ var SwaggerInfo = swaggerInfo{
 	BasePath:    "",
 	Schemes:     []string{},
 	Title:       "prince-x API",
-	Description: "基于Gin + Vue + Element UI的前后端分离权限管理系统的接口文档\n添加qq: 200922702 请备注，谢谢！",
+	Description: "基于基于Gin + ant design  Pro V4的前后端分离权限管理系统的接口文档\n添加qq: 200922702 请备注，谢谢！",
 }
 
 type s struct{}
