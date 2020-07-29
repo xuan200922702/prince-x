@@ -76,7 +76,6 @@ func registerPageRouter(v1 *gin.RouterGroup, authMiddleware *jwt.GinJWTMiddlewar
 		v1auth.GET("/rolelist", system.GetRoleList)
 		v1auth.GET("/deptList", system.GetDeptList)
 		v1auth.GET("/deptTree", system.GetDeptTree)
-		v1auth.GET("/rolelist", system.GetRoleList)
 		v1auth.GET("/menulist", system.GetMenuList)
 		v1auth.GET("/loginloglist", log2.GetLoginLogList)
 	}
