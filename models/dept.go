@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"prince-x/global/orm"
 	"prince-x/tools"
 )
@@ -27,6 +28,73 @@ func (Dept) TableName() string {
 	return "prince_dept"
 }
 
+type DeptLable struct {
+	Id       int         `gorm:"-" json:"id"`
+	Label    string      `gorm:"-" json:"label"`
+	Children []DeptLable `gorm:"-" json:"children"`
+}
+
+func (e *Dept) Create() (Dept, error) {
+	var doc Dept
+	result := orm.Eloquent.Table(e.TableName()).Create(&e)
+	if result.Error != nil {
+		err := result.Error
+		return doc, err
+	}
+	deptPath := "/" + tools.IntToString(e.DeptId)
+	if int(e.ParentId) != 0 {
+		var deptP Dept
+		orm.Eloquent.Table(e.TableName()).Where("dept_id = ?", e.ParentId).First(&deptP)
+		deptPath = deptP.DeptPath + deptPath
+	} else {
+		deptPath = "/0" + deptPath
+	}
+	var mp = map[string]string{}
+	mp["deptPath"] = deptPath
+	if err := orm.Eloquent.Table(e.TableName()).Where("dept_id = ?", e.DeptId).Update(mp).Error; err != nil {
+		err := result.Error
+		return doc, err
+	}
+	doc = *e
+	doc.DeptPath = deptPath
+	return doc, nil
+}
+func (e *Dept) GetList() ([]Dept, error) {
+	var doc []Dept
+
+	table := orm.Eloquent.Table(e.TableName())
+	if e.DeptId != 0 {
+		table = table.Where("dept_id = ?", e.DeptId)
+	}
+	if e.DeptName != "" {
+		table = table.Where("dept_name = ?", e.DeptName)
+	}
+	if e.Status != "" {
+		table = table.Where("status = ?", e.Status)
+	}
+
+	if err := table.Order("sort").Find(&doc).Error; err != nil {
+		return doc, err
+	}
+	return doc, nil
+}
+
+func (e *Dept) Get() (Dept, error) {
+	var doc Dept
+
+	table := orm.Eloquent.Table(e.TableName())
+	if e.DeptId != 0 {
+		table = table.Where("dept_id = ?", e.DeptId)
+	}
+	if e.DeptName != "" {
+		table = table.Where("dept_name = ?", e.DeptName)
+	}
+
+	if err := table.First(&doc).Error; err != nil {
+		return doc, err
+	}
+	return doc, nil
+}
 func (e *Dept) SetDept(bl bool) ([]Dept, error) {
 	list, err := e.GetPage(bl)
 
@@ -75,6 +143,86 @@ func (e *Dept) GetPage(bl bool) ([]Dept, error) {
 	return doc, nil
 }
 
+func (e *Dept) Update(id int) (update Dept, err error) {
+	if err = orm.Eloquent.Table(e.TableName()).Where("dept_id = ?", id).First(&update).Error; err != nil {
+		return
+	}
+
+	deptPath := "/" + tools.IntToString(e.DeptId)
+	if int(e.ParentId) != 0 {
+		var deptP Dept
+		orm.Eloquent.Table(e.TableName()).Where("dept_id = ?", e.ParentId).First(&deptP)
+		deptPath = deptP.DeptPath + deptPath
+	} else {
+		deptPath = "/0" + deptPath
+	}
+	e.DeptPath = deptPath
+
+	if e.DeptPath != "" && e.DeptPath != update.DeptPath {
+		return update, errors.New("上级部门不允许修改！")
+	}
+
+	//参数1:是要修改的数据
+	//参数2:是修改的数据
+
+	if err = orm.Eloquent.Table(e.TableName()).Model(&update).Updates(&e).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (dept *Dept) SetDeptLable() (m []DeptLable, err error) {
+	deptlist, err := dept.GetList()
+
+	m = make([]DeptLable, 0)
+	for i := 0; i < len(deptlist); i++ {
+		if deptlist[i].ParentId != 0 {
+			continue
+		}
+		e := DeptLable{}
+		e.Id = deptlist[i].DeptId
+		e.Label = deptlist[i].DeptName
+		deptsInfo := DiguiDeptLable(&deptlist, e)
+
+		m = append(m, deptsInfo)
+	}
+	return
+}
+func (e *Dept) Delete(id int) (success bool, err error) {
+
+	user := PrinceUser{}
+	user.DeptId = id
+	userlist, err := user.GetList()
+	tools.HasError(err, "", 500)
+	tools.Assert(len(userlist) <= 0, "当前部门存在用户，不能删除！", 500)
+
+	tx := orm.Eloquent.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err = tx.Error; err != nil {
+		success = false
+		return
+	}
+
+	if err = tx.Table(e.TableName()).Where("dept_id = ?", id).Delete(&Dept{}).Error; err != nil {
+		success = false
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit().Error; err != nil {
+		success = false
+		return
+	}
+	success = true
+
+	return
+}
+
 func Digui(deptlist *[]Dept, menu Dept) Dept {
 	list := *deptlist
 
@@ -101,4 +249,21 @@ func Digui(deptlist *[]Dept, menu Dept) Dept {
 	}
 	menu.Children = min
 	return menu
+}
+func DiguiDeptLable(deptlist *[]Dept, dept DeptLable) DeptLable {
+	list := *deptlist
+
+	min := make([]DeptLable, 0)
+	for j := 0; j < len(list); j++ {
+
+		if dept.Id != list[j].ParentId {
+			continue
+		}
+		mi := DeptLable{list[j].DeptId, list[j].DeptName, []DeptLable{}}
+		ms := DiguiDeptLable(deptlist, mi)
+		min = append(min, ms)
+
+	}
+	dept.Children = min
+	return dept
 }

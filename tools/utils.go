@@ -23,6 +23,19 @@ func CompareHashAndPassword(e string, p string) (bool, error) {
 	return true, nil
 }
 
+// Assert 条件断言
+// 当断言条件为 假 时触发 panic
+// 对于当前请求不会再执行接下来的代码，并且返回指定格式的错误信息和错误码
+func Assert(condition bool, msg string, code ...int) {
+	if !condition {
+		statusCode := 200
+		if len(code) > 0 {
+			statusCode = code[0]
+		}
+		panic("CustomError#" + strconv.Itoa(statusCode) + "#" + msg)
+	}
+}
+
 // HasError 错误断言
 // 当 error 不为 nil 时触发 panic
 // 对于当前请求不会再执行接下来的代码，并且返回指定格式的错误信息和错误码

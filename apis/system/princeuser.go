@@ -24,7 +24,7 @@ import (
 func GetPrinceUserList(c *gin.Context) {
 	var data models.PrinceUser
 	var err error
-	var pageSize = 3
+	var pageSize = 10
 	var pageIndex = 1
 
 	size := c.Request.FormValue("pageSize")
@@ -72,4 +72,49 @@ func CreatePrinceUser(c *gin.Context) {
 	id, err := princeuser.Insert()
 	tools.HasError(err, "添加失败,用户名已存在", 500)
 	app.OK(c, id, "添加成功")
+}
+
+// @Summary 修改用户数据
+// @Description 获取JSON
+// @Tags 用户
+// @Accept  application/json
+// @Product application/json
+// @Param data body models.SysUser true "body"
+// @Success 200 {string} string	"{"code": 200, "message": "修改成功"}"
+// @Success 200 {string} string	"{"code": -1, "message": "修改失败"}"
+// @Router /api/v1/sysuser/{userId} [put]
+func UpdatePrinceUser(c *gin.Context) {
+	var data models.PrinceUser
+	err := c.Bind(&data)
+	tools.HasError(err, "数据解析失败", -1)
+	data.UpdateBy = tools.GetUserIdStr(c)
+	result, err := data.Update(data.UserId)
+	tools.HasError(err, "修改失败", 500)
+	app.OK(c, result, "修改成功")
+}
+
+// @Summary 删除用户数据
+// @Description 删除数据
+// @Tags 用户
+// @Param userId path int true "userId"
+// @Success 200 {string} string	"{"code": 200, "message": "删除成功"}"
+// @Success 200 {string} string	"{"code": -1, "message": "删除失败"}"
+// @Router /api/v1/sysuser/{userId} [delete]
+func DeletePrinceUser(c *gin.Context) {
+	var data models.PrinceUser
+	data.UpdateBy = tools.GetUserIdStr(c)
+	IDS := tools.IdsStrToIdsIntGroup("userId", c)
+	result, err := data.BatchDelete(IDS)
+	tools.HasError(err, "删除失败", 500)
+	app.OK(c, result, "删除成功")
+}
+
+func PrinceUserUpdatePwd(c *gin.Context) {
+	var pwd models.PrinceUserPwd
+	err := c.Bind(&pwd)
+	tools.HasError(err, "数据解析失败", 500)
+	sysuser := models.PrinceUser{}
+	sysuser.UserId = tools.GetUserId(c)
+	sysuser.SetPwd(pwd)
+	app.OK(c, "", "密码修改成功")
 }

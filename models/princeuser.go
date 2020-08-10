@@ -3,8 +3,10 @@ package models
 import (
 	"errors"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"prince-x/global/orm"
 	"prince-x/tools"
+	"strings"
 )
 
 type UserName struct {
@@ -61,11 +63,84 @@ func (PrinceUser) TableName() string {
 	return "prince_user"
 }
 
+type PrinceUserPwd struct {
+	OldPassword string `json:"oldPassword"`
+	NewPassword string `json:"newPassword"`
+}
+
 type PrinceUserPage struct {
 	PrinceUserId
 	PrinceUserB
 	LoginM
 	DeptName string `gorm:"-" json:"deptName"`
+}
+
+func (e *PrinceUser) GetList() (PrinceUserView []PrinceUserView, err error) {
+
+	table := orm.Eloquent.Table(e.TableName()).Select([]string{"prince_user.*", "prince_role.role_name"})
+	table = table.Joins("left join prince_role on prince_user.role_id=prince_role.role_id")
+	if e.UserId != 0 {
+		table = table.Where("user_id = ?", e.UserId)
+	}
+
+	if e.Username != "" {
+		table = table.Where("username = ?", e.Username)
+	}
+
+	if e.Password != "" {
+		table = table.Where("password = ?", e.Password)
+	}
+
+	if e.RoleId != 0 {
+		table = table.Where("role_id = ?", e.RoleId)
+	}
+
+	if e.DeptId != 0 {
+		table = table.Where("dept_id = ?", e.DeptId)
+	}
+
+	if e.PostId != 0 {
+		table = table.Where("post_id = ?", e.PostId)
+	}
+
+	if err = table.Find(&PrinceUserView).Error; err != nil {
+		return
+	}
+	return
+}
+
+func (e *PrinceUser) GetUserInfo() (PrinceUserView PrinceUserView, err error) {
+
+	table := orm.Eloquent.Table(e.TableName()).Select([]string{"prince_user.*", "prince_role.role_name"})
+	table = table.Joins("left join prince_role on prince_user.role_id=prince_role.role_id")
+	if e.UserId != 0 {
+		table = table.Where("user_id = ?", e.UserId)
+	}
+
+	if e.Username != "" {
+		table = table.Where("username = ?", e.Username)
+	}
+
+	if e.Password != "" {
+		table = table.Where("password = ?", e.Password)
+	}
+
+	if e.RoleId != 0 {
+		table = table.Where("role_id = ?", e.RoleId)
+	}
+
+	if e.DeptId != 0 {
+		table = table.Where("dept_id = ?", e.DeptId)
+	}
+
+	if e.PostId != 0 {
+		table = table.Where("post_id = ?", e.PostId)
+	}
+
+	if err = table.First(&PrinceUserView).Error; err != nil {
+		return
+	}
+	return
 }
 
 func (e *PrinceUser) GetPage(pageSize int, pageIndex int) ([]PrinceUserPage, int, error) {
@@ -174,5 +249,55 @@ func (e PrinceUser) Insert() (id int, err error) {
 		return
 	}
 	id = e.UserId
+	return
+}
+
+//修改
+func (e *PrinceUser) Update(id int) (update PrinceUser, err error) {
+	if e.Password != "" {
+		if err = e.Encrypt(); err != nil {
+			return
+		}
+	}
+
+	if err = orm.Eloquent.Table(e.TableName()).First(&update, id).Error; err != nil {
+		return
+	}
+	if e.RoleId == 0 {
+		e.RoleId = update.RoleId
+	}
+
+	//参数1:是要修改的数据
+	//参数2:是修改的数据
+	if err = orm.Eloquent.Table(e.TableName()).Model(&update).Updates(&e).Error; err != nil {
+		return
+	}
+	return
+}
+
+func (e *PrinceUser) BatchDelete(id []int) (Result bool, err error) {
+	if err = orm.Eloquent.Unscoped().Where("user_id in (?)", id).Delete(&PrinceUser{}).Error; err != nil {
+		return
+	}
+	Result = true
+	return
+}
+
+func (e *PrinceUser) SetPwd(pwd PrinceUserPwd) (Result bool, err error) {
+	user, err := e.GetUserInfo()
+	if err != nil {
+		tools.HasError(err, "获取用户数据失败(代码202)", 500)
+	}
+	_, err = tools.CompareHashAndPassword(user.Password, pwd.OldPassword)
+	if err != nil {
+		if strings.Contains(err.Error(), "hashedPassword is not the hash of the given password") {
+			tools.HasError(err, "密码错误(代码202)", 500)
+		}
+		log.Print(err)
+		return
+	}
+	e.Password = pwd.NewPassword
+	_, err = e.Update(e.UserId)
+	tools.HasError(err, "更新密码失败(代码202)", 500)
 	return
 }
