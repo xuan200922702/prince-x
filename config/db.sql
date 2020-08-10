@@ -3,7 +3,19 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 BEGIN;
-INSERT INTO `casbin_rule` VALUES ('p', 'admin', '/api/v1/getinfo', 'GET', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/princeUser', 'POST', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/princeUserList', 'GET', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/princeUser', 'PUT', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/princeUser/:id', 'DELETE', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/rolelist', 'GET', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/princeRole', 'POST', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/princeRole', 'PUT', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/princeRole/:id', 'DELETE', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/getinfo', 'GET', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/deptList', 'GET', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/deptTree', 'GET', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/menulist', 'GET', NULL, NULL, NULL);
+INSERT INTO `princexdb`.`casbin_rule`(`p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`) VALUES ('p', 'admin', '/api/v1/princeRole/:id', 'GET', NULL, NULL, NULL);
 COMMIT;
 
 BEGIN;
